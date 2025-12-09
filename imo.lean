@@ -25,7 +25,7 @@ lemma a_mono {a : ℕ → ℕ}
     exact hmon hmn
 
 
-/- Step 1: Show that b is strictly increasing. -/
+/- Step 1: Show that (b_n) is strictly increasing. -/
 include hmono
 lemma b_strictMono : StrictMono (b a) := by
     intro n m hnm
@@ -95,7 +95,7 @@ lemma b_strictMono : StrictMono (b a) := by
         have hf:= Finset.sum_lt_sum hle1 hlt1
         grind
 
-/- Show the equivalence condition of the inequality for (a_n) and (b_n).-/
+/- Step 2: Show the equivalence condition of the inequality for (a_n) and (b_n).-/
 lemma a_b_equiv_cond (n : ℕ) :
   ((a (n+1) : ℝ) < (∑ k ∈ Finset.range (n+2), a k) / (n+1)) ∧
      ((∑ k ∈ Finset.range (n+2), a k) / (n+1) ≤ (a (n+2) : ℝ))
@@ -107,8 +107,7 @@ lemma a_b_equiv_cond (n : ℕ) :
         _= n * a (n+1) - ∑ k ∈ Finset.range n, (a (n+1) - a (k+1)) + a 0 := by simp [b]
         _= n * a (n+1) - ∑ k ∈ Finset.range n, ((a (n+1) : ℝ) - (a (k+1) : ℝ)) + a 0 := by
              rw [Nat.cast_sum]
-             congr 1
-             congr 1
+             congr 1; congr 1
              apply Finset.sum_congr rfl
              intro k hk
              rw [Nat.cast_sub]
@@ -140,10 +139,9 @@ lemma a_b_equiv_cond (n : ℕ) :
             apply Eq.symm
             rw [Finset.sum_range_succ]
             grind
-  have h_b_rec : b a (n+1) = b a n + (n+1) * (a (n+2) - a (n+1)) := by
+  have hb : b a (n+1) = b a n + (n+1) * (a (n+2) - a (n+1)) := by
     simp [b]
     rw [Finset.sum_range_succ]
-
     have split_sum : ∑ x ∈ Finset.range n, (a (n + 2) - a (x + 1)) =
                      ∑ x ∈ Finset.range n, ((a (n + 1) - a (x + 1)) + (a (n + 2) - a (n + 1))) := by
         apply Finset.sum_congr rfl
@@ -170,7 +168,7 @@ lemma a_b_equiv_cond (n : ℕ) :
       rw [mul_comm (a (n + 1) : ℝ) (n + 1 : ℝ)] at h₁
       rw [sub_add_eq_add_sub, lt_sub_iff_add_lt, add_lt_add_iff_left] at h₁
       norm_cast at h₁
-    · rw [h_b_rec]
+    · rw [hb]
       rw [← Nat.cast_le (α := ℝ)]
       rw [div_le_iff₀ (Nat.cast_add_one_pos n)] at h₂
       rw [sub_add_eq_add_sub, sub_le_iff_le_add] at h₂
@@ -178,8 +176,7 @@ lemma a_b_equiv_cond (n : ℕ) :
       rw [← le_sub_iff_add_le] at h₂
       rw [add_sub_assoc] at h₂
       simp
-      rw [Nat.cast_sub (a_mono hmono (Nat.le_succ _))]
-      rw [mul_sub]
+      rw [Nat.cast_sub (a_mono hmono (Nat.le_succ _)), mul_sub]
       grind
   · intro h
     rcases h with ⟨h₁, h₂⟩
@@ -194,12 +191,12 @@ lemma a_b_equiv_cond (n : ℕ) :
       rw [div_le_iff₀ (Nat.cast_add_one_pos n), mul_comm (a (n + 2) : ℝ) (n + 1 : ℝ)]
       rw [sub_add_eq_add_sub, sub_le_iff_le_add]
       rw [← Nat.cast_le (α := ℝ)] at h₂
-      rw [h_b_rec, Nat.cast_add, Nat.cast_mul] at h₂
+      rw [hb, Nat.cast_add, Nat.cast_mul] at h₂
       rw [Nat.cast_sub (a_mono hmono (Nat.le_succ _)), mul_sub] at h₂
       simp at h₂
       grind
 
-/- Show the unique existence of n satisfying the inequality for (b_n). -/
+/- Step 3: Show the unique existence of n satisfying the inequality for (b_n). -/
 lemma exists_unique_n (hpos : ∀ n, a n > 0) :
   ∃! n, b a n < a 0 ∧ a 0 ≤ b a (n+1) := by
 
@@ -209,7 +206,7 @@ lemma exists_unique_n (hpos : ∀ n, a n > 0) :
     apply Nat.le_trans (Nat.le_refl _)
     apply StrictMono.id_le (b_strictMono a hmono)
 
-  -- Find smallest k
+  -- Find smallest such $N$
   let P := fun k => a 0 ≤ b a k
   have hex : ∃ n, P n := h_unbounded
   let N := Nat.find hex
@@ -219,8 +216,7 @@ lemma exists_unique_n (hpos : ∀ n, a n > 0) :
   constructor
   · constructor
     · have hN_pos : 0 < N := by
-        by_contra h_zero
-        simp at h_zero
+        by_contra h_zero; simp at h_zero
         have h_spec : a 0 ≤ b a N := Nat.find_spec hex
         rw [h_zero, b_zero] at h_spec
         linarith [hpos 0]
@@ -252,8 +248,8 @@ lemma exists_unique_n (hpos : ∀ n, a n > 0) :
       have h_mono : b a (m+1) ≤ b a (N-1) :=
         (b_strictMono a hmono).monotone (Nat.succ_le_of_lt h_lt)
       have h_lt_N : N - 1 < N := Nat.pred_lt (ne_of_gt hN_pos)
-      have h_b_k_lt : b a (N-1) < a 0 := Nat.lt_of_not_ge (Nat.find_min hex h_lt_N)
-      have h_contra : b a (m+1) < a 0 := Nat.lt_of_le_of_lt h_mono h_b_k_lt
+      have hbk_lt : b a (N-1) < a 0 := Nat.lt_of_not_ge (Nat.find_min hex h_lt_N)
+      have h_contra : b a (m+1) < a 0 := Nat.lt_of_le_of_lt h_mono hbk_lt
       linarith
 
     · have h_le_m : N ≤ m := by
@@ -263,11 +259,10 @@ lemma exists_unique_n (hpos : ∀ n, a n > 0) :
       have h_spec : a 0 ≤ b a N := Nat.find_spec hex
       linarith
 
-/- Finally, conclude the problem using the above lemmas. -/
+/- Step 4: Conclude the problem using the lemmas above. -/
 include hpos
 theorem imo_problem :
-  ∃! n,
-    (a n : ℝ) < (∑ k ∈ Finset.range (n+1), a k) / n ∧
+  ∃! n, (a n : ℝ) < (∑ k ∈ Finset.range (n+1), a k) / n ∧
     (∑ k ∈ Finset.range (n+1), a k) / n ≤ (a (n+1) : ℝ) := by
 
     obtain ⟨n, hn_all, huniq⟩ := exists_unique_n a hmono hpos
@@ -285,20 +280,18 @@ theorem imo_problem :
           by_contra h; simp at h
           rcases hm_all with ⟨h_lt, _⟩
           rw [h] at *
-          simp at h_lt
-          norm_cast at h_lt
+          simp at h_lt; norm_cast at h_lt
 
       let k := m - 1
       have mk : m = k + 1 := (Nat.sub_add_cancel m_pos).symm
-      have h_b_k : b a k < a 0 ∧ a 0 ≤ b a (k+1) := by
+      have hbk : b a k < a 0 ∧ a 0 ≤ b a (k+1) := by
           rw [mk] at hm_all
           have : k + 1 + 1 = k + 2 := by rfl
           simp [this] at hm_all
           rw [← Nat.cast_sum] at hm_all
-          have := (a_b_equiv_cond a hmono k).mp hm_all
-          exact this
+          exact (a_b_equiv_cond a hmono k).mp hm_all
 
-      have k_is_n : k = n := huniq k h_b_k
+      have k_is_n : k = n := huniq k hbk
       rw [mk, k_is_n]
 
 
