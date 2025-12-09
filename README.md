@@ -1,9 +1,10 @@
-# IMO 2014 Q1
+# Formalization of IMO 2014 - Q1
 
 Let $a_0 < a_1 < a_2 < \dots$ be an infinite sequence of positive integers. Prove that there exists a unique integer $n\geq 1$ such that
 $a_n < \frac{a_0+a_1+a_2+\cdots+a_n}{n} \leq a_{n+1}.$
 
-Solution:
+*Solution:*
+
  Define sequence $(b_n)$, where $b_n=(a_n-a_{n-1})+\dots+(a_n-a_1)$. 
  Then $b_1=0$ and $(b_n)$ is a strictly increasing sequence.
 
