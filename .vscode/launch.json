@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/caothuyan/Brown Course Material/Fall 2025/cs1715/cs1715-fp",
+      "program": "/Users/caothuyan/Brown Course Material/Fall 2025/cs1715/cs1715-fp/build/Debug/outDebug"
+    }
+  ]
+}
