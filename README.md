@@ -25,8 +25,11 @@ We follow the folling steps based on the solution above:
 ### Step 0: Definitions
 First define the sequence $(a_n)$ as a function $\mathbb{N} \to \mathbb{N}$, mapping each index to a natural number, with two additional conditions: (1) stricly increasing (`StrictMono`), (2) All elements in the sequence are positive integers.
 
-Next define the sequence $(b_n)$ as in the solution above, with an index shift by $1$ so that the sequence starts with index $0$, e.g.
+Next define the sequence $(b_n)$ as in the solution above, with an index shift by $1$ so that the sequence starts with index $0$, in particular, 
 
+$$b_n=(a_{n+1}-a_{n})+\dots+(a_{n+1}-a_1)$$
+
+e.g.
 $b_0 = 0, \quad b_1 = a_2-a_1, \quad b_2 = (a_3-a_2)+(a_3-a_1) \quad \dots$
 
 ### Step 1: Show that $(b_n)$ is a strictly increasing sequence.
