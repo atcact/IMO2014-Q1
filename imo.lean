@@ -1,4 +1,3 @@
-import Imo.Basic
 import Mathlib
 import Mathlib.Data.Real.Basic
 import Mathlib.Tactic
@@ -8,22 +7,25 @@ variable (a : ℕ → ℕ)             -- define sequence of nonnegative integer
 variable (hmono : StrictMono a)  -- define strictly increasing sequence
 variable (hpos : ∀ n, a n > 0)   -- define positive integers
 
--- Define b (shifted by 1)
+/- Define sequence (b_n).
+Note that in the solution, (b_n) is defined starting from b_1.
+For convenience, we will shift the index by 1 so (b_n) is defined starting from b_0. -/
 def b (n : ℕ) : ℕ :=
   ∑ k ∈ Finset.range n , (a (n+1) - a (k+1))
 
--- Show that b_0 = 0.
+-- Step 0.1: Show that b_0 = 0.
 lemma b_zero : b a 0 = 0 := by
   unfold b
   simp
 
--- Show that (a_n) is increasing.
+/- Step 0.2: Show that (a_n) is increasing. -/
 lemma a_mono {a : ℕ → ℕ}
   (hmono : StrictMono a) {m n : ℕ} (hmn : m ≤ n) : a m ≤ a n := by
     have hmon : Monotone a := hmono.monotone
     exact hmon hmn
 
--- Show that b is strictly increasing
+
+/- Step 1: Show that b is strictly increasing. -/
 include hmono
 lemma b_strictMono : StrictMono (b a) := by
     intro n m hnm
@@ -93,7 +95,7 @@ lemma b_strictMono : StrictMono (b a) := by
         have hf:= Finset.sum_lt_sum hle1 hlt1
         grind
 
--- Show the equivalence condition of the inequality for (a_n) and (b_n)
+/- Show the equivalence condition of the inequality for (a_n) and (b_n).-/
 lemma a_b_equiv_cond (n : ℕ) :
   ((a (n+1) : ℝ) < (∑ k ∈ Finset.range (n+2), a k) / (n+1)) ∧
      ((∑ k ∈ Finset.range (n+2), a k) / (n+1) ≤ (a (n+2) : ℝ))
@@ -197,16 +199,78 @@ lemma a_b_equiv_cond (n : ℕ) :
       simp at h₂
       grind
 
--- Show the unique existence of n satisfying the inequality for (b_n)
-lemma exists_unique_n :
-  ∃! n, b a n < a 0 ∧ a 0 ≤ b a (n+1) := by sorry
+/- Show the unique existence of n satisfying the inequality for (b_n). -/
+lemma exists_unique_n (hpos : ∀ n, a n > 0) :
+  ∃! n, b a n < a 0 ∧ a 0 ≤ b a (n+1) := by
 
+  -- There exists N such that b_N ≥ a_0
+  have h_unbounded : ∃ N, a 0 ≤ b a N := by
+    exists a 0
+    apply Nat.le_trans (Nat.le_refl _)
+    apply StrictMono.id_le (b_strictMono a hmono)
+
+  -- Find smallest k
+  let P := fun k => a 0 ≤ b a k
+  have hex : ∃ n, P n := h_unbounded
+  let N := Nat.find hex
+
+  -- Show existence by n = N - 1
+  exists (N - 1)
+  constructor
+  · constructor
+    · have hN_pos : 0 < N := by
+        by_contra h_zero
+        simp at h_zero
+        have h_spec : a 0 ≤ b a N := Nat.find_spec hex
+        rw [h_zero, b_zero] at h_spec
+        linarith [hpos 0]
+
+      have h_lt_N : N - 1 < N := Nat.pred_lt (ne_of_gt hN_pos)
+      have h_not_ge := Nat.find_min hex h_lt_N
+      simp [P] at h_not_ge
+      exact h_not_ge
+    · have h_succ : N - 1 + 1 = N := Nat.succ_pred_eq_of_pos (Nat.pos_of_ne_zero (by
+          intro h_zero; simp at h_zero
+          have h_spec : a 0 ≤ b a N := Nat.find_spec hex
+          rw [h_zero, b_zero] at h_spec
+          linarith [hpos 0]
+        ))
+      rw [h_succ]
+      exact Nat.find_spec hex
+
+  -- Show uniqueness
+  · intro m hm
+    rcases hm with ⟨hm1, hm2⟩
+    by_contra h_ne
+    rcases Nat.lt_or_gt_of_ne h_ne with h_lt | h_gt
+    · have hN_pos : 0 < N := by
+        by_contra z; simp at z
+        have h_spec : a 0 ≤ b a N := Nat.find_spec hex
+        rw [z, b_zero] at h_spec
+        linarith [hpos 0]
+
+      have h_mono : b a (m+1) ≤ b a (N-1) :=
+        (b_strictMono a hmono).monotone (Nat.succ_le_of_lt h_lt)
+      have h_lt_N : N - 1 < N := Nat.pred_lt (ne_of_gt hN_pos)
+      have h_b_k_lt : b a (N-1) < a 0 := Nat.lt_of_not_ge (Nat.find_min hex h_lt_N)
+      have h_contra : b a (m+1) < a 0 := Nat.lt_of_le_of_lt h_mono h_b_k_lt
+      linarith
+
+    · have h_le_m : N ≤ m := by
+        have := Nat.succ_le_of_lt h_gt
+        grind
+      have h_mono : b a N ≤ b a m := (b_strictMono a hmono).monotone h_le_m
+      have h_spec : a 0 ≤ b a N := Nat.find_spec hex
+      linarith
+
+/- Finally, conclude the problem using the above lemmas. -/
+include hpos
 theorem imo_problem :
   ∃! n,
     (a n : ℝ) < (∑ k ∈ Finset.range (n+1), a k) / n ∧
     (∑ k ∈ Finset.range (n+1), a k) / n ≤ (a (n+1) : ℝ) := by
 
-    obtain ⟨n, hn_all, huniq⟩ := exists_unique_n a hmono
+    obtain ⟨n, hn_all, huniq⟩ := exists_unique_n a hmono hpos
     refine ⟨n + 1, ?prop_n, ?uniq_n⟩
     · simp
       constructor
