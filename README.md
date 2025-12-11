@@ -1,9 +1,14 @@
 # Formalization of IMO 2014 - Q1
 
-Let $a_0 < a_1 < a_2 < \dots$ be an infinite sequence of positive integers. Prove that there exists a unique integer $n\geq 1$ such that
-$a_n < \frac{a_0+a_1+a_2+\cdots+a_n}{n} \leq a_{n+1}.$
+This project is a formal verification of the solution to Problem 1 of the International Mathematical Olympiad (IMO) 2014 using Lean theorem prover. 
 
-*Solution:*
+**Problem:**
+
+Let $a_0 < a_1 < a_2 < \dots$ be an infinite sequence of positive integers. Prove that there exists a unique integer $n\geq 1$ such that
+
+$$a_n < \frac{a_0+a_1+a_2+\cdots+a_n}{n} \leq a_{n+1}.$$
+
+**Solution:**
 
  Define sequence $(b_n)$, where $b_n=(a_n-a_{n-1})+\dots+(a_n-a_1)$. 
  Then $b_1=0$ and $(b_n)$ is a strictly increasing sequence.
@@ -52,3 +57,5 @@ theorem imo_problem :
 ∃! n, (a n : ℝ) < (∑ k ∈ Finset.range (n+1), a k) / n ∧
     (∑ k ∈ Finset.range (n+1), a k) / n ≤ (a (n+1) : ℝ)
 ```
+
+Github repo: [https://github.com/atcact/IMO2014-Q1.git](https://github.com/atcact/IMO2014-Q1.git)
